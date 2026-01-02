@@ -1,25 +1,41 @@
-# Start from a standard Microsoft base image for dev containers
+# Start from the official Microsoft Python dev container image
 FROM mcr.microsoft.com/devcontainers/python:3.10
 
-# Switch to the root user to install system-level software
+# Switch to the root user to install system packages
 USER root
 
-# Install Google Chrome, Xvfb (the virtual screen), and audio/video libraries
+# --- SIMPLIFIED & CORRECTED INSTALLATION ---
+# Install only the essential dependencies for Chrome and Xvfb
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
-    wget xvfb pulseaudio \
-    # Dependencies for Chrome
-    libxss1 libappindicator1 libindicator7 gconf-service libasound2 libnspr4 \
-    libnss3 libxtst6 ca-certificates fonts-liberation libappindicator3-1 \
-    libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcups2 libdbus-1-3 \
-    libdrm2 libgbm1 libgconf-2-4 libgdk-pixbuf2.0-0 libgtk-3-0 \
-    libu2f-udev libvulkan1 libx11-xcb1 libxcb-dri3-0 libxcomposite1 \
-    libxdamage1 libxext6 libxfixes3 libxrandr2 libxshmfence1
+    wget \
+    xvfb \
+    # Minimal dependencies for Chrome to run headlessly
+    ca-certificates \
+    fonts-liberation \
+    libappindicator3-1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libgdk-pixbuf2.0-0 \
+    libnspr4 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libxtst6 \
+    xdg-utils
 
 # Download and install the official Google Chrome package
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
     && dpkg -i google-chrome-stable_current_amd64.deb; apt-get -fy install \
     && rm google-chrome-stable_current_amd64.deb
+
+# Clean up apt-get cache to save space
+RUN rm -rf /var/lib/apt/lists/*
 
 # Switch back to the default, non-root user for security
 USER vscode
