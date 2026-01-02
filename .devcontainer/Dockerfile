@@ -4,37 +4,20 @@ FROM mcr.microsoft.com/devcontainers/python:3.10
 # Switch to the root user to install system packages
 USER root
 
-# --- SIMPLIFIED & CORRECTED INSTALLATION ---
-# Install only the essential dependencies for Chrome and Xvfb
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends \
-    wget \
-    xvfb \
-    # Minimal dependencies for Chrome to run headlessly
-    ca-certificates \
-    fonts-liberation \
-    libappindicator3-1 \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libcups2 \
-    libdbus-1-3 \
-    libgdk-pixbuf2.0-0 \
-    libnspr4 \
-    libnss3 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    libxtst6 \
-    xdg-utils
+# --- AGGRESSIVE & CORRECTED INSTALLATION ---
+# Force apt-get to update its package lists before trying to install.
+RUN apt-get update
 
-# Download and install the official Google Chrome package
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && dpkg -i google-chrome-stable_current_amd64.deb; apt-get -fy install \
-    && rm google-chrome-stable_current_amd64.deb
+# Install xvfb separately and first to ensure it is present.
+RUN apt-get install -y xvfb
 
-# Clean up apt-get cache to save space
+# Now, install Google Chrome and its other dependencies.
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable
+
+# Clean up the package cache to save space
 RUN rm -rf /var/lib/apt/lists/*
 
 # Switch back to the default, non-root user for security
